@@ -8,6 +8,7 @@
         <div class="row">
             <div class="col-md-4">
                 <select name="filter" class="form-control" onchange="this.form.submit()">
+                    <option value="all" {{ $filter === 'all' ? 'selected' : '' }}>Semua Data</option>
                     <option value="weekly" {{ $filter === 'weekly' ? 'selected' : '' }}>Mingguan</option>
                     <option value="monthly" {{ $filter === 'monthly' ? 'selected' : '' }}>Bulanan</option>
                     <option value="yearly" {{ $filter === 'yearly' ? 'selected' : '' }}>Tahunan</option>
@@ -53,6 +54,12 @@
                 <div class="card-header">Total Pendapatan</div>
                 <div class="card-body">
                     <h2>Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h2>
+                    @if($filter !== 'all')
+                    <p class="text-muted">
+                        Tahun Lalu: Rp {{ number_format($previousTotalRevenue, 0, ',', '.') }}
+                        ({{ $totalRevenue > $previousTotalRevenue ? '+' : '' }}{{ number_format(($totalRevenue - $previousTotalRevenue) / $previousTotalRevenue * 100, 2) }}%)
+                    </p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -86,6 +93,7 @@
                 </div>
             </div>
         </div>
+        <div class="row mt-4">
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">Grafik Pendapatan Tahunan</div>
@@ -94,6 +102,17 @@
                 </div>
             </div>
         </div>
+        @if($filter !== 'all')
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Grafik Pendapatan Tahun Lalu</div>
+                <div class="card-body">
+                    <canvas id="previousYearlyRevenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
     </div>
 </div>
 @endsection
@@ -203,5 +222,32 @@
                 }
             }
         });
+
+        @if($filter !== 'all')
+        new Chart(document.getElementById('previousYearlyRevenueChart'), {
+            type: 'bar',
+            data: {
+                labels: {!! $previousYearlyRevenue->pluck('year')->toJson() !!},
+                datasets: [{
+                    label: 'Pendapatan Tahun Lalu',
+                    data: {!! $previousYearlyRevenue->pluck('total_revenue')->toJson() !!},
+                    backgroundColor: 'orange'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rp ' + value.toLocaleString('id-ID');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        @endif
     });
 </script>
