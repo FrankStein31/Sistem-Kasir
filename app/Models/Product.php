@@ -18,7 +18,7 @@ class Product extends Model
         'stock',
         'price',
         'variant',
-        'category',
+        'category'
     ];
 
     public $timestamps = true;

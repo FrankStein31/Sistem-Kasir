@@ -21,6 +21,10 @@ class Transaction extends Model
         'product_id',
     ];
 
+    protected $casts = [
+        'total' => 'decimal:2',
+    ];
+
     public $timestamps = true;
 
     public function product()
