@@ -25,6 +25,8 @@ class UserController extends Controller
 
     public function saveUser(Request $request)
     {
+        $is_new = false;
+
         if ($request->input('user_id')) {
             $user = User::find($request->input('user_id'));
         } else {
@@ -36,9 +38,10 @@ class UserController extends Controller
                 $user = new User;
             }
 
+            // Now set $is_new to true when creating a new user
             $is_new = true;
         }
-    
+
         $data = $request->except(['token', 'nonce', 'password']);
         
         if ($is_new) {
@@ -46,11 +49,11 @@ class UserController extends Controller
         }
 
         $user->fill($data);
-    
+
         if ($request->filled('password')) {
             $user->password = $request->input('password');
         }
-    
+
         if ($user->save()) {
             return back()->with('success', 'User saved successfully.');
         } else {

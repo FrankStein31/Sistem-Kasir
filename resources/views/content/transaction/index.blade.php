@@ -10,6 +10,9 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="card-title mb-0">Data Transaction</h6>
                         <div>
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='{{ route('laporan.index') }}'">
+                                Lihat Laporan
+                            </button>
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exportModal">
                                 Export to Excel
                             </button>
@@ -42,8 +45,9 @@
                                     <th>Customer Name</th>
                                     <th>Qty</th>
                                     <th>Method Payment</th>
-                                    <th>Total</th>
                                     <th>Product</th>
+                                    <th>Total</th>
+                                    <th>Tanggal</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -54,8 +58,9 @@
                                         <td>{{ $item->customer_name }}</td>
                                         <td>{{ $item->qty }}</td>
                                         <td>{{ ucfirst($item->method_payment) }}</td>
-                                        <td>{{ $item->total }}</td>
                                         <td>{{ $item->product->name }} [{{ number_format($item->product->price, 2) }}]</td>
+                                        <td>{{ $item->total }}</td>
+                                        <td>{{ $item->created_at->format('d F Y') }} : {{ $item->created_at->format('H:i') }}</td>
                                         <td>
                                             <button type="button" class="btn btn-sm btn-info editTransactionButton"
                                                 data-id="{{ $item->transaction_id }}"
@@ -92,7 +97,7 @@
                 </div>
                 <form id="transactionForm" method="POST" action="{{ route('transaction.save') }}">
                     @csrf
-                    <input type="hidden" id="modalMethod" name="_method">
+                    <!-- <input type="hidden" id="modalMethod" name="_method"> -->
                     <input type="hidden" id="transactionId" name="id">
                     <div class="modal-body">
                         <div class="mb-3">
@@ -112,19 +117,20 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="modalTotal" class="form-label">Total</label>
-                            <input type="number" class="form-control" id="modalTotal" name="total" required>
-                        </div>
-                        <div class="mb-3">
                             <label for="modalProduct" class="form-label">Product</label>
                             <select class="form-control" id="modalProduct" name="product_id" required>
                                 <option value="">-- Select Product --</option>
-                                @foreach ($products as $product)
+                                    @foreach ($products as $product)
                                     <option value="{{ $product->product_id }}">
                                         {{ $product->name }} [{{ number_format($product->price, 2) }}]
                                     </option>
-                                @endforeach
-                            </select>
+                                    @endforeach
+                                </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalTotal" class="form-label">Total</label>
+                            <input type="hidden" class="form-control" id="modalTotal" name="total" required>
+                            <div id="totalDisplay" class="form-control bg-light" readonly>Rp 0</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -148,18 +154,29 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="startDate" class="form-label">Start Date</label>
-                            <input type="date" class="form-control" id="startDate" name="start_date" required>
+                            <input type="date" class="form-control" id="startDate" name="start_date">
                         </div>
                         <div class="mb-3">
                             <label for="endDate" class="form-label">End Date</label>
-                            <input type="date" class="form-control" id="endDate" name="end_date" required>
+                            <input type="date" class="form-control" id="endDate" name="end_date">
                         </div>
                         <div class="mb-3">
-                            <label for="methodPayment" class="form-label">Method Payment</label>
+                            <label for="methodPayment" class="form-label">Payment Method</label>
                             <select class="form-control" id="methodPayment" name="method_payment">
-                                <option value="">-- All Methods --</option>
+                                <option value="">-- All Payment Methods --</option>
                                 <option value="cash">Cash</option>
                                 <option value="transfer">Transfer</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="productId" class="form-label">Product</label>
+                            <select class="form-control" id="productId" name="product_id">
+                                <option value="">-- All Products --</option>
+                                @foreach ($products as $product)
+                                <option value="{{ $product->product_id }}">
+                                    {{ $product->name }} [{{ number_format($product->price, 2) }}]
+                                </option>
+                                @endforeach
                             </select>
                         </div>
                     </div>
@@ -176,22 +193,53 @@
 @section('scripts')
     <script>
         $(document).ready(function () {
+
+            $('#modalProduct, #modalQty').on('change', function () {
+                calculateTotal();
+            });
+
+            function calculateTotal() {
+                const productSelect = $('#modalProduct');
+                const qtyInput = $('#modalQty');
+                const totalInput = $('#modalTotal');
+
+                if (productSelect.val() && qtyInput.val()) {
+                    const selectedProduct = productSelect.find('option:selected');
+                    const productPrice = parseFloat(selectedProduct.text().match(/\[(.*?)\]/)[1].replace(/,/g, ''));
+                    const qty = parseInt(qtyInput.val());
+
+                    const total = productPrice * qty;
+                    totalInput.val(total);
+                    
+                    // Optional: Format and display total with currency formatting
+                    $('#totalDisplay').text('Rp ' + total.toLocaleString('id-ID'));
+                } else {
+                    totalInput.val('');
+                    $('#totalDisplay').text('Rp 0');
+                }
+            }
+
             $('#addTransactionButton').on('click', function () {
                 $('#transactionModalLabel').text('Tambah Transaction');
                 $('#transactionForm').attr('action', '{{ route('transaction.save') }}');
                 $('#modalMethod').val('');
                 $('#modalSubmitButton').text('Tambah Transaction');
                 clearModalFields();
+                calculateTotal(); // Add this line
             });
 
             $('.editTransactionButton').on('click', function () {
                 const data = $(this).data();
                 $('#transactionModalLabel').text('Edit Transaction');
                 $('#transactionForm').attr('action', '{{ route('transaction.save') }}');
-                $('#modalMethod').val('PUT');
+                // Remove the hidden method input
+                $('#modalMethod').remove();
+                // Instead, add a hidden input to indicate this is an edit
+                $('#transactionForm').append('<input type="hidden" name="_edit" value="1">');
                 $('#modalSubmitButton').text('Save Changes');
                 populateModalFields(data);
                 $('#transactionModal').modal('show');
+                calculateTotal();
             });
 
             $('#startDate').on('change', function () {

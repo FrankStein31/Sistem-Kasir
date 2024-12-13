@@ -88,7 +88,7 @@
                 </div>
                 <form id="productForm" method="POST" action="{{ route('product.save') }}">
                     @csrf
-                    <input type="hidden" id="modalMethod" name="_method">
+                    <!-- <input type="hidden" id="modalMethod" name="_method"> -->
                     <input type="hidden" id="productId" name="id">
                     <div class="modal-body">
                         <div class="mb-3" id="productIdField" style="display: none;">
@@ -132,7 +132,8 @@
             $('#addProductButton').on('click', function() {
                 $('#productModalLabel').text('Tambah Product');
                 $('#productForm').attr('action', '{{ route('product.save') }}');
-                $('#modalMethod').val('');
+                // Remove this line
+                // $('#modalMethod').val('');
                 $('#modalSubmitButton').text('Tambah Product');
                 $('#productIdField').hide();
                 clearModalFields();
@@ -142,7 +143,8 @@
                 const data = $(this).data();
                 $('#productModalLabel').text('Edit Product');
                 $('#productForm').attr('action', '{{ route('product.save') }}');
-                $('#modalMethod').val('PUT');
+                // Remove this line
+                // $('#modalMethod').val('PUT');
                 $('#modalSubmitButton').text('Save Changes');
                 $('#productIdField').show();
                 populateModalFields(data);
@@ -150,6 +152,7 @@
             });
 
             function clearModalFields() {
+                // Remove the hidden input for productId
                 $('#productId').val('');
                 $('#modalProduct_id').val('');
                 $('#modalName').val('');
@@ -160,6 +163,7 @@
             }
 
             function populateModalFields(data) {
+                // Populate productId for both hidden inputs
                 $('#productId').val(data.id);
                 $('#modalProduct_id').val(data.product_id);
                 $('#modalName').val(data.name);

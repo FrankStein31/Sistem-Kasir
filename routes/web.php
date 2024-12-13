@@ -10,6 +10,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\LaporanController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -58,4 +59,7 @@ Route::get('transaction', [TransactionController::class, 'index'])->name('transa
 Route::post('transaction/save', [TransactionController::class, 'saveTransaction'])->name('transaction.save');
 
 Route::delete('transaction/delete/{id}', [TransactionController::class, 'deleteTransaction'])->name('transaction.delete');
+
+//laporan
+Route::get('laporan', [LaporanController::class, 'index'])->name('laporan.index');
 });

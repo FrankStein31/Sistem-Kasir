@@ -28,7 +28,7 @@ class AuthController extends Controller
         if ($response && $response->code === 0) {
             $roleData = $response->data->roles[0];
             session(['roles' => $roleData]);
-            return redirect('/users')->with('success', 'Login berhasil');
+            return redirect('product')->with('success', 'Login berhasil');
         } else {
             return back()->withErrors(['message' => 'Login gagal, username atau password salah.']);
         }
